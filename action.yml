@@ -54,6 +54,7 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
+        BASE_DIR="${{ inputs.base_path }}"
         PARENT_DIR=$(dirname $BASE_DIR)
 
         # Create base kustomization.yaml
