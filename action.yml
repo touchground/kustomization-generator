@@ -42,13 +42,15 @@ runs:
     - name: Generate Kustomization Base and Overlay Structure
       run: |
         merge_kustomization_files() {
-          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization.yaml
+          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
             echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
             rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
             exit 1
           fi
           rm kustomization_original.yaml
+          rm kustomization.yaml
+          mv kustomization_merge.yaml kustomization.yaml
         }
 
         BASE_DIR="${{ inputs.base_path }}"
