@@ -70,7 +70,7 @@ runs:
           merge_kust=true
         fi
         echo "merge_kust: $merge_kust"
-        
+
         kustomize create --autodetect
         
         # Add labels to kustomization.yaml
@@ -88,7 +88,7 @@ runs:
         fi
 
         # Merge files
-        if [ $merge_kust ]; then
+        if [ "$merge_kust" = "true" ]; then
           merge_kustomization_files
         fi
 
