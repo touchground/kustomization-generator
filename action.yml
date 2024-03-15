@@ -63,11 +63,14 @@ runs:
         # If kustomization.yaml already exists, merge it with the new one 
         if [ ! -f "kustomization.yaml" ]; then
           merge_kust=false
+          echo "Generate Base"
         else
           mv kustomization.yaml kustomization_original.yaml
+          echo "Base kustomization.yaml file already exists"
           merge_kust=true
         fi
-
+        echo "merge_kust: $merge_kust"
+        
         kustomize create --autodetect
         
         # Add labels to kustomization.yaml
