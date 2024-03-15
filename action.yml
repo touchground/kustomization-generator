@@ -41,7 +41,6 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
-        set -ex;
         merge_kustomization_files() {
           yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
@@ -94,15 +93,19 @@ runs:
 
         popd
         # Create overlays kustomization folders and kustomization.yaml files for each environment
+        ENVIRONMENTS="${{ inputs.environments }}"
         IFS=',' read -ra ENV_ARRAY <<< "$ENVIRONMENTS"
         for ENV in "${ENV_ARRAY[@]}"; do
+          echo "Processing $ENV..."
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
 
           # If kustomization.yaml already exists, merge it with the new one 
           if [ ! -f "kustomization.yaml" ]; then
+            echo "Generating kustomization.yaml..."
             kustomize create --resources ../../base
           else
+            echo "kustomization.yaml aleady exists, merge with the new file."
             mv kustomization.yaml kustomization_original.yaml
             kustomize create --resources ../../base
             merge_kustomization_files
