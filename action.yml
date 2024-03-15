@@ -1,0 +1,73 @@
+name: 'Generate Kustomization Base and Overlay Structure'
+description: 'Generates Kustomization base and overlay folders and files structure and merges if kustomization.yaml already exists'
+inputs:
+  base_path:
+    description: 'The base path to create the Kustomize files in. Example: ./k8s/base'
+    required: true
+  environments:
+    description: 'The environments to create overlays for. Comma-delimited string. Example: dev,staging,prod'
+    required: true
+    default: ''
+  namespace:
+    description: 'The namespace to create the resources in'
+    required: false
+    default: 'default'
+  labels:
+    description: 'The labels to add to the resources. Comma-delimited string of key-value pairs. Example: app=nginx,env=dev'
+    required: false
+runs:
+  using: "composite"
+  steps:
+    - name: Input Validation
+      run: |
+        BASE_DIR="${{ inputs.base_path }}"
+        if [ ! -d "$BASE_DIR" ]; then
+          echo "Directory $BASE_DIR does not exist"
+          exit 1
+        fi
+
+        YAML_FILES=$(find $BASE_DIR -name "*.yaml")
+        if [ -z "$YAML_FILES" ]; then
+          echo "No YAML files found in $BASE_DIR and its subdirectories"
+          exit 1
+        fi
+
+        ENVIRONMENTS="${{ inputs.environments }}"
+        if [ -z "$ENVIRONMENTS" ] || [[ "$ENVIRONMENTS" != *","* ]]; then
+          echo "Environments input is empty or not a comma-delimited string"
+          exit 1
+        fi
+      shell: bash
+
+    - name: Generate Kustomization Base and Overlay Structure
+      run: |
+        PARENT_DIR=$(dirname $BASE_DIR)
+
+        # Create base kustomization.yaml
+        pushd $BASE_DIR
+        kustomize create --autodetect
+
+        # Add labels to kustomization.yaml
+        echo "commonLabels:" >> kustomization.yaml
+        IFS=',' read -ra LABEL_ARRAY <<< "${{ inputs.labels }}"
+        for LABEL in "${LABEL_ARRAY[@]}"; do
+          IFS='=' read -ra KV <<< "$LABEL"
+          echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+        done
+
+        # Add namespace to kustomization.yaml if it exists
+        NAMESPACE="${{ inputs.namespace }}"
+        if [ -n "$NAMESPACE" ]; then
+          echo "namespace: $NAMESPACE" >> kustomization.yaml
+        fi
+
+        popd
+        # Create overlays kustomization folders and kustomization.yaml files for each environment
+        IFS=',' read -ra ENV_ARRAY <<< "$ENVIRONMENTS"
+        for ENV in "${ENV_ARRAY[@]}"; do
+          mkdir -p $PARENT_DIR/overlays/$ENV
+          pushd $PARENT_DIR/overlays/$ENV
+          kustomize create --resources ../../base 
+          popd
+        done
+      shell: bash
