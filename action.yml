@@ -60,14 +60,15 @@ runs:
         pushd $BASE_DIR
 
         # If kustomization.yaml already exists, merge it with the new one 
-        if [ ! -f "kustomization.yaml" ]; then
-          kustomize create --autodetect
-        else
+        if [ -f "kustomization.yaml" ]; then
           mv kustomization.yaml kustomization_original.yaml
-          kustomize create --autodetect
-          merge_kustomization_files
+          merge_kust=true
+        else
+          merge_kust=fale
         fi
 
+        kustomize create --autodetect
+        
         # Add labels to kustomization.yaml
         echo "commonLabels:" >> kustomization.yaml
         IFS=',' read -ra LABEL_ARRAY <<< "${{ inputs.labels }}"
@@ -82,6 +83,11 @@ runs:
           echo "namespace: $NAMESPACE" >> kustomization.yaml
         fi
 
+        # Merge files
+        if [ $merge_kust ]; then
+          merge_kustomization_files
+        fi
+
         popd
         # Create overlays kustomization folders and kustomization.yaml files for each environment
         IFS=',' read -ra ENV_ARRAY <<< "$ENVIRONMENTS"
@@ -94,7 +100,7 @@ runs:
             kustomize create --resources ../../base
           else
             mv kustomization.yaml kustomization_original.yaml
-            kkustomize create --resources ../../base
+            kustomize create --resources ../../base
             merge_kustomization_files
           fi
 
