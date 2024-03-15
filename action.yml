@@ -62,7 +62,7 @@ runs:
 
         # If kustomization.yaml already exists, merge it with the new one 
         if [ ! -f "kustomization.yaml" ]; then
-          merge_kust=fails
+          merge_kust=false
         else
           mv kustomization.yaml kustomization_original.yaml
           merge_kust=true
