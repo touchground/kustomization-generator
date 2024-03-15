@@ -41,6 +41,7 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
+        set -ex;
         merge_kustomization_files() {
           yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
@@ -60,11 +61,11 @@ runs:
         pushd $BASE_DIR
 
         # If kustomization.yaml already exists, merge it with the new one 
-        if [ -f "kustomization.yaml" ]; then
+        if [ ! -f "kustomization.yaml" ]; then
+          merge_kust=fails
+        else
           mv kustomization.yaml kustomization_original.yaml
           merge_kust=true
-        else
-          merge_kust=fale
         fi
 
         kustomize create --autodetect
