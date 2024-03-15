@@ -39,13 +39,33 @@ runs:
         fi
       shell: bash
 
+    - name: Create merge kustomization files function
+      run: |
+        merge_kustomization_files() {
+          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_new.yaml > kustomization_merged.yaml
+          if [ $? -ne 0 ]; then
+            echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
+            exit 1
+          fi
+          mv kustomization_merged.yaml kustomization.yaml
+          rm kustomization_new.yaml
+        }
+      shell: bash
+
     - name: Generate Kustomization Base and Overlay Structure
       run: |
         PARENT_DIR=$(dirname $BASE_DIR)
 
         # Create base kustomization.yaml
         pushd $BASE_DIR
-        kustomize create --autodetect
+
+        # If kustomization.yaml already exists, merge it with the new one 
+        if [ ! -f "kustomization.yaml" ]; then
+          kustomize create --autodetect
+        else
+          kustomize create --autodetect > kustomization_new.yaml
+          merge_kustomization_files
+        fi
 
         # Add labels to kustomization.yaml
         echo "commonLabels:" >> kustomization.yaml
@@ -67,7 +87,15 @@ runs:
         for ENV in "${ENV_ARRAY[@]}"; do
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
-          kustomize create --resources ../../base 
+
+          # If kustomization.yaml already exists, merge it with the new one 
+          if [ ! -f "kustomization.yaml" ]; then
+            kustomize create --resources ../../base
+          else
+            kkustomize create --resources ../../base > kustomization_new.yaml
+            merge_kustomization_files
+          fi
+
           popd
         done
       shell: bash

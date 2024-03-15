@@ -1,6 +1,9 @@
 # kustomization-generator
 Generates Kustomization base and overlay folders and files structure
 
+## Requirements:
+- yq - v4.42.1
+- kustomize - v5.3.0
 
 ## Inputs:
 * <b>base_path</b>: [Required] base folder where contains basic k8s manifest files.
