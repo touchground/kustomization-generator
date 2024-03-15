@@ -48,8 +48,7 @@ runs:
             rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
             exit 1
           fi
-          mv kustomization_merged.yaml kustomization.yaml
-          rm kustomization_new.yaml
+          rm kustomization_original.yaml
         }
       shell: bash
 
