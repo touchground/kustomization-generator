@@ -42,9 +42,10 @@ runs:
     - name: Create merge kustomization files function
       run: |
         merge_kustomization_files() {
-          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_new.yaml > kustomization_merged.yaml
+          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
             echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
+            rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
             exit 1
           fi
           mv kustomization_merged.yaml kustomization.yaml
@@ -64,7 +65,8 @@ runs:
         if [ ! -f "kustomization.yaml" ]; then
           kustomize create --autodetect
         else
-          kustomize create --autodetect > kustomization_new.yaml
+          mv kustomization.yaml kustomization_orginal.yaml
+          kustomize create --autodetect
           merge_kustomization_files
         fi
 
@@ -93,7 +95,8 @@ runs:
           if [ ! -f "kustomization.yaml" ]; then
             kustomize create --resources ../../base
           else
-            kkustomize create --resources ../../base > kustomization_new.yaml
+            mv kustomization.yaml kustomization_orginal.yaml
+            kkustomize create --resources ../../base
             merge_kustomization_files
           fi
 
