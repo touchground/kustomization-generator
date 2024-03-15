@@ -50,7 +50,7 @@ runs:
           fi
           rm kustomization_original.yaml
           rm kustomization.yaml
-          mv kustomization_merge.yaml kustomization.yaml
+          mv kustomization_merged.yaml kustomization.yaml
         }
 
         BASE_DIR="${{ inputs.base_path }}"
