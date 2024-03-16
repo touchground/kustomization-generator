@@ -54,6 +54,15 @@ runs:
           mv kustomization_merged.yaml kustomization.yaml
         }
 
+        # Suppress output
+        pushd () {
+          command pushd "$@" > /dev/null
+        }
+
+        popd () {
+          command popd "$@" > /dev/null
+        }
+
         BASE_DIR="${{ inputs.base_path }}"
         PARENT_DIR=$(dirname $BASE_DIR)
 
