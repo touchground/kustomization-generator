@@ -41,6 +41,7 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
+        # merge function
         merge_kustomization_files() {
           yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
@@ -65,34 +66,40 @@ runs:
           echo "Generate Base"
         else
           mv kustomization.yaml kustomization_original.yaml
-          echo "Base kustomization.yaml file already exists"
           merge_kust=true
         fi
-        echo "merge_kust: $merge_kust"
-
         kustomize create --autodetect
         
         # Add labels to kustomization.yaml
-        echo "commonLabels:" >> kustomization.yaml
-        IFS=',' read -ra LABEL_ARRAY <<< "${{ inputs.labels }}"
-        for LABEL in "${LABEL_ARRAY[@]}"; do
-          IFS='=' read -ra KV <<< "$LABEL"
-          echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
-        done
+        LABELS="${{ inputs.labels }}"
+        if [ -n "$LABELS" ]; then
+          echo "Adding labels"
+          echo "commonLabels:" >> kustomization.yaml
+          IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
+          for LABEL in "${LABEL_ARRAY[@]}"; do
+            IFS='=' read -ra KV <<< "$LABEL"
+            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+          done
+        fi
 
         # Add namespace to kustomization.yaml if it exists
         NAMESPACE="${{ inputs.namespace }}"
         if [ -n "$NAMESPACE" ]; then
+          echo "Adding namespace"
           echo "namespace: $NAMESPACE" >> kustomization.yaml
         fi
 
         # Merge files
         if [ "$merge_kust" = "true" ]; then
+          echo "Base kustomization.yaml file already exists, merge with the new file."
           merge_kustomization_files
         fi
 
         popd
+        echo ""
         # Create overlays kustomization folders and kustomization.yaml files for each environment
+        echo "=========================================="
+        echo "Create overlay environment structure"
         ENVIRONMENTS="${{ inputs.environments }}"
         IFS=',' read -ra ENV_ARRAY <<< "$ENVIRONMENTS"
         for ENV in "${ENV_ARRAY[@]}"; do
@@ -110,7 +117,9 @@ runs:
             kustomize create --resources ../../base
             merge_kustomization_files
           fi
-
+          echo ""
           popd
+        echo "=========================================="
+        echo "completed!"
         done
       shell: bash
