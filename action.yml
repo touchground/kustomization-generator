@@ -105,10 +105,10 @@ runs:
         fi
 
         popd
-        echo ""
+        echo " "
         # Create overlays kustomization folders and kustomization.yaml files for each environment
-        echo "=========================================="
         echo "Create overlay environment structure"
+        echo "=========================================="
         ENVIRONMENTS="${{ inputs.environments }}"
         IFS=',' read -ra ENV_ARRAY <<< "$ENVIRONMENTS"
         for ENV in "${ENV_ARRAY[@]}"; do
@@ -126,9 +126,8 @@ runs:
             kustomize create --resources ../../base
             merge_kustomization_files
           fi
-          echo ""
           popd
-        echo "=========================================="
-        echo "completed!"
+          echo "=========================================="
         done
+        echo "completed!"
       shell: bash
