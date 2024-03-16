@@ -43,7 +43,7 @@ runs:
       run: |
         # merge function
         merge_kustomization_files() {
-          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
+          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1) style="\""' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
             echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
             rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
