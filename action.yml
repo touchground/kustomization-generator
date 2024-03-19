@@ -18,6 +18,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+     - name: Install tools
+      uses: touchground/devops-tools@release
+      with:
+        yq: '4.42.1'
+        kustomize: '5.3.0'
+
     - name: Input Validation
       run: |
         BASE_DIR="${{ inputs.base_path }}"
@@ -43,7 +49,7 @@ runs:
       run: |
         # merge function
         merge_kustomization_files() {
-          yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
+          tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
             echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
             rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
@@ -76,7 +82,7 @@ runs:
           mv kustomization.yaml kustomization_original.yaml
           merge_kust=true
         fi
-        kustomize create --autodetect
+        tg-kustomize create --autodetect
         
         # Add labels to kustomization.yaml
         LABELS="${{ inputs.labels }}"
@@ -118,11 +124,11 @@ runs:
           # If kustomization.yaml already exists, merge it with the new one 
           if [ ! -f "kustomization.yaml" ]; then
             echo "Generating kustomization.yaml..."
-            kustomize create --resources ../../base
+            tg-kustomize create --resources ../../base
           else
             echo "kustomization.yaml aleady exists, merge with the new file."
             mv kustomization.yaml kustomization_original.yaml
-            kustomize create --resources ../../base
+            tg-kustomize create --resources ../../base
             merge_kustomization_files
           fi
           popd
