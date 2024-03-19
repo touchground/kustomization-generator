@@ -18,7 +18,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-     - name: Install tools
+    - name: Install tools
       uses: touchground/devops-tools@release
       with:
         yq: '4.42.1'
