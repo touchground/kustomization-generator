@@ -1,7 +1,7 @@
 name: 'Generate Kustomization Base and Overlay Structure'
 description: 'Generates Kustomization base and overlay folders and files structure and merges if kustomization.yaml already exists'
 inputs:
-  base_path:
+  basePath:
     description: 'The base path to create the Kustomize files in. Example: ./k8s/base'
     required: true
   environments:
@@ -12,7 +12,7 @@ inputs:
     description: 'The namespace to create the resources in'
     required: false
     default: 'default'
-  labels:
+  commonLabels:
     description: 'The labels to add to the resources. Comma-delimited string of key-value pairs. Example: app=nginx,env=dev'
     required: false
 runs:
@@ -26,7 +26,7 @@ runs:
 
     - name: Input Validation
       run: |
-        BASE_DIR="${{ inputs.base_path }}"
+        BASE_DIR="${{ inputs.basePath }}"
         if [ ! -d "$BASE_DIR" ]; then
           echo "Directory $BASE_DIR does not exist"
           exit 1
@@ -69,7 +69,7 @@ runs:
           command popd "$@" > /dev/null
         }
 
-        BASE_DIR="${{ inputs.base_path }}"
+        BASE_DIR="${{ inputs.basePath }}"
         PARENT_DIR=$(dirname $BASE_DIR)
 
         # Create base kustomization.yaml
@@ -85,7 +85,7 @@ runs:
         tg-kustomize create --autodetect
         
         # Add labels to kustomization.yaml
-        LABELS="${{ inputs.labels }}"
+        LABELS="${{ inputs.commonLabels }}"
         if [ -n "$LABELS" ]; then
           echo "Adding labels"
           echo "commonLabels:" >> kustomization.yaml
