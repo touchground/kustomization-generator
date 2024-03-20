@@ -132,7 +132,7 @@ runs:
             tg-kustomize create --resources ../../base 
 
             # Add namePrefix if envPrefix is true
-            if [ "$envPrefix" = "true" ]; then
+            if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
           else
@@ -141,7 +141,7 @@ runs:
             tg-kustomize create --resources ../../base
 
             # Add namePrefix if envPrefix is true
-            if [ "$envPrefix" = "true" ]; then
+            if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
             
