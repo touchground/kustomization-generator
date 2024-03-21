@@ -1,4 +1,4 @@
-name: 'Generate Kustomization Base and Overlay Structure'
+name: 'Generate Kustomization Base and Overlays Structure'
 description: 'Generates Kustomization base and overlay folders and files structure and merges if kustomization.yaml already exists'
 inputs:
   basePath:
