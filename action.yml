@@ -173,8 +173,7 @@ runs:
             fi
           else
             echo "kustomization.yaml aleady exists, merge with the new file."
-            # mv kustomization.yaml kustomization_original.yaml
-            rm kustomization.yaml
+            mv kustomization.yaml kustomization_original.yaml
 
              # Add yaml files to the appropriate section in kustomization.yaml
             YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
@@ -214,7 +213,7 @@ runs:
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
             
-            # merge_kustomization_files
+            merge_kustomization_files
           fi
 
           popd
