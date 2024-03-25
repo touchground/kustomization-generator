@@ -176,7 +176,7 @@ runs:
             mv kustomization.yaml kustomization_original.yaml
 
              # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization*.yaml")
+            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
             RESOURCE_YAML_FILES_ARRAY=()
             PATCH_YAML_FILES_ARRAY=()
 
@@ -212,8 +212,16 @@ runs:
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
-            
-            merge_kustomization_files
+
+            # Merge original and new kustomization.yaml
+            echo "Merging original and new kustomization.yaml..."
+            yq m -a=append kustomization_original.yaml kustomization.yaml > kustomization_merged.yaml
+
+            # Replace original kustomization.yaml with the merged one
+            rm kustomization_original.yaml
+            mv kustomization_merged.yaml kustomization.yaml
+
+            # merge_kustomization_files
           fi
 
           popd
