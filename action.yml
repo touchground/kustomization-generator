@@ -153,6 +153,7 @@ runs:
             echo "Adding ../../base to resources"
             RESOURCE_YAML_FILES_ARRAY+=("../../base")
             YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
+            echo "YAML_FILES_COMMA_SEPARATED: $YAML_FILES_COMMA_SEPARATED"
             tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
 
             # Add patch files to the appropriate section in kustomization.yaml
@@ -161,7 +162,7 @@ runs:
               for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
                 echo "Adding $PATCH_FILE to patches"
                 echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  targets:" >> kustomization.yaml
+                echo "  target:" >> kustomization.yaml
                 echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
               done
             fi
@@ -172,7 +173,8 @@ runs:
             fi
           else
             echo "kustomization.yaml aleady exists, merge with the new file."
-            mv kustomization.yaml kustomization_original.yaml
+            # mv kustomization.yaml kustomization_original.yaml
+            rm kustomization.yaml
 
              # Add yaml files to the appropriate section in kustomization.yaml
             YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
@@ -193,6 +195,7 @@ runs:
             echo "Adding ../../base to resources"
             RESOURCE_YAML_FILES_ARRAY+=("../../base")
             YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
+            echo "YAML_FILES_COMMA_SEPARATED: $YAML_FILES_COMMA_SEPARATED"
             tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
 
             # Add patch files to the appropriate section in kustomization.yaml
@@ -201,7 +204,7 @@ runs:
               for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
                 echo "Adding $PATCH_FILE to patches"
                 echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  targets:" >> kustomization.yaml
+                echo "  target:" >> kustomization.yaml
                 echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
               done
             fi
@@ -211,7 +214,7 @@ runs:
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
             
-            merge_kustomization_files
+            # merge_kustomization_files
           fi
 
           popd
