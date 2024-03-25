@@ -176,7 +176,7 @@ runs:
             mv kustomization.yaml kustomization_original.yaml
 
              # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
+            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization*.yaml")
             RESOURCE_YAML_FILES_ARRAY=()
             PATCH_YAML_FILES_ARRAY=()
 
