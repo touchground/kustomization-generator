@@ -129,42 +129,7 @@ runs:
           # If kustomization.yaml already exists, merge it with the new one 
           if [ ! -f "kustomization.yaml" ]; then
             echo "Generating kustomization.yaml..."
-
-            # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
-            RESOURCE_YAML_FILES_ARRAY=()
-            PATCH_YAML_FILES_ARRAY=()
-
-            # add ../../base to resources
-            echo "Adding ../../base to resources"
-            RESOURCE_YAML_FILES_ARRAY+=("../../base")
-
-            for FILE in $YAML_FILES; do
-              FILENAME=$(basename -- "$FILE")
-              if [[ $FILENAME == patch* ]]; then
-                PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-              else
-                echo "Adding $FILENAME to resources"
-                RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-              fi
-            done
-           
-            # add ../../base to resources
-            echo "Adding ../../base to resources"
-            RESOURCE_YAML_FILES_ARRAY+=("../../base")
-            YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
-            tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
-
-            # Add patch files to the appropriate section in kustomization.yaml
-            if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
-              echo "patches:" >> kustomization.yaml
-              for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-                echo "Adding $PATCH_FILE to patches"
-                echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  targets:" >> kustomization.yaml
-                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
-              done
-            fi
+            tg-kustomize create --resources ../../base 
 
             # Add namePrefix if envPrefix is true
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
@@ -173,38 +138,7 @@ runs:
           else
             echo "kustomization.yaml aleady exists, merge with the new file."
             mv kustomization.yaml kustomization_original.yaml
-
-             # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
-            RESOURCE_YAML_FILES_ARRAY=()
-            PATCH_YAML_FILES_ARRAY=()
-
-            for FILE in $YAML_FILES; do
-              FILENAME=$(basename -- "$FILE")
-              if [[ $FILENAME == patch* ]]; then
-                PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-              else
-                echo "Adding $FILENAME to resources"
-                RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-              fi
-            done
-            
-            # add ../../base to resources
-            echo "Adding ../../base to resources"
-            RESOURCE_YAML_FILES_ARRAY+=("../../base")
-            YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
-            tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
-
-            # Add patch files to the appropriate section in kustomization.yaml
-            if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
-              echo "patches:" >> kustomization.yaml
-              for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-                echo "Adding $PATCH_FILE to patches"
-                echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  targets:" >> kustomization.yaml
-                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
-              done
-            fi
+            tg-kustomize create --resources ../../base
 
             # Add namePrefix if envPrefix is true
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
@@ -213,7 +147,6 @@ runs:
             
             merge_kustomization_files
           fi
-
           popd
           echo "=========================================="
         done
