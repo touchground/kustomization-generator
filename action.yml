@@ -13,7 +13,10 @@ inputs:
     required: false
     default: 'default'
   commonLabels:
-    description: 'The labels to add to the resources. Comma-delimited string of key-value pairs. Example: app=nginx,env=dev'
+    description: 'The labels to add to the resources. Comma-delimited string of key-value pairs. Example: app:nginx,env:dev'
+    required: false
+  annotations:
+    description: 'The annotations to add to the resources. Comma-delimited string of key-value pairs. Example: team:devops,owner:john'
     required: false
   envPrefix:
     description: 'Add environment prefix to add to the resources'
@@ -52,19 +55,6 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
-        # merge function
-        merge_kustomization_files() {
-          tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization.yaml kustomization_original.yaml > kustomization_merged.yaml
-          if [ $? -ne 0 ]; then
-            echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
-            rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
-            exit 1
-          fi
-          rm kustomization_original.yaml
-          rm kustomization.yaml
-          mv kustomization_merged.yaml kustomization.yaml
-        }
-
         # Suppress output
         pushd () {
           command pushd "$@" > /dev/null
@@ -83,7 +73,7 @@ runs:
         # If kustomization.yaml already exists, skip
         if [ ! -f "kustomization.yaml" ]; then
           # Generate base
-          tg-kustomize create --autodetect
+          tg-kustomize create --autodetect --labels ${{ inputs.commonLabels }} --annotations ${{ inputs.commonAnnotations }}
 
           # Update image name to a spaceholder in deployment file
           echo "Update image name"
@@ -94,9 +84,21 @@ runs:
           if [ -n "$LABELS" ]; then
             echo "Adding labels"
             echo "commonLabels:" >> kustomization.yaml
-            IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
+            IFS=':' read -ra LABEL_ARRAY <<< "$LABELS"
             for LABEL in "${LABEL_ARRAY[@]}"; do
               IFS='=' read -ra KV <<< "$LABEL"
+              echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+            done
+          fi
+
+          # Add annotations to kustomization.yaml
+          ANNOTATIONS="${{ inputs.annotations }}"
+          if [ -n "$ANNOTATIONS" ]; then
+            echo "Adding annotations"
+            echo "commonAnnotations:" >> kustomization.yaml
+            IFS=':' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
+            for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
+              IFS='=' read -ra KV <<< "$ANNOTATION"
               echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
             done
           fi
@@ -157,6 +159,7 @@ runs:
                 echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
               done
             fi
+            
             # Add namePrefix if envPrefix is true
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
@@ -165,52 +168,10 @@ runs:
             # Add images placeholder
             echo "images:" >> kustomization.yaml
             echo "- name: IMAGE_NAME" >> kustomization.yaml
-            echo "  newName: myApp" >> kustomization.yaml
-            echo "  newTag: v1.0" >> kustomization.yaml
-
+            echo "  newName: NoImage" >> kustomization.yaml
+            echo "  newTag: NotRelease" >> kustomization.yaml
           else
-            echo "kustomization.yaml aleady exists, skip generate new file."
-            # mv kustomization.yaml kustomization_original.yaml
-
-            #  # Add yaml files to the appropriate section in kustomization.yaml
-            # YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization*.yaml")
-            # RESOURCE_YAML_FILES_ARRAY=()
-            # PATCH_YAML_FILES_ARRAY=()
-
-            # for FILE in $YAML_FILES; do
-            #   FILENAME=$(basename -- "$FILE")
-            #   if [[ $FILENAME == patch* ]]; then
-            #     PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-            #   else
-            #     echo "Adding $FILENAME to resources"
-            #     RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-            #   fi
-            # done
-            
-            # # add ../../base to resources
-            # echo "Adding ../../base to resources"
-            # RESOURCE_YAML_FILES_ARRAY+=("../../base")
-            # YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
-            # echo "YAML_FILES_COMMA_SEPARATED: $YAML_FILES_COMMA_SEPARATED"
-            # tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
-
-            # # Add patch files to the appropriate section in kustomization.yaml
-            # if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
-            #   echo "patches:" >> kustomization.yaml
-            #   for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-            #     echo "Adding $PATCH_FILE to patches"
-            #     echo "- path: $PATCH_FILE" >> kustomization.yaml
-            #     echo "  target:" >> kustomization.yaml
-            #     echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
-            #   done
-            # fi
-
-            # # Add namePrefix if envPrefix is true
-            # if [ "${{ inputs.envPrefix }}" = "true" ]; then
-            #   echo "namePrefix: $ENV-" >> kustomization.yaml
-            # fi
-            
-            # # merge_kustomization_files
+            echo "kustomization.yaml aleady exists"
           fi
 
           popd
