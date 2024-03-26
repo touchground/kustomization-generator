@@ -86,7 +86,8 @@ runs:
           tg-kustomize create --autodetect
 
           # Update image name to a spaceholder in deployment file
-          sed -i "s|        - image:  .*|        - image: IMAGE_NAME|" deployment.yaml
+          echo "Update image name"
+          sed -i 's|^\(\s*- image:\).*|\1 IMAGE_NAME|' deployment.yaml
 
           # Add labels to kustomization.yaml
           LABELS="${{ inputs.commonLabels }}"
