@@ -114,16 +114,16 @@ runs:
         fi
 
         # Add annotations to kustomization.yaml
-        ANNOTATIONS="${{ inputs.annotations }}"
-        if [ -n "$ANNOTATIONS" ]; then
-          echo "Adding annotations"
-          echo "commonAnnotations:" >> kustomization.yaml
-          IFS=':' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
-          for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
-            IFS='=' read -ra KV <<< "$ANNOTATION"
-            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
-          done
-        fi
+        # ANNOTATIONS="${{ inputs.annotations }}"
+        # if [ -n "$ANNOTATIONS" ]; then
+        #   echo "Adding annotations"
+        #   echo "commonAnnotations:" >> kustomization.yaml
+        #   IFS=':' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
+        #   for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
+        #     IFS='=' read -ra KV <<< "$ANNOTATION"
+        #     echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+        #   done
+        # fi
 
         # Add namespace to kustomization.yaml if it exists
         NAMESPACE="${{ inputs.namespace }}"
