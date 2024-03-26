@@ -166,11 +166,17 @@ runs:
                 echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
               done
             fi
-
             # Add namePrefix if envPrefix is true
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
+
+            # Add images placeholder
+            echo "images:" >> kustomization.yaml
+            echo "- name: IMAGE_NAME" >> kustomization.yaml
+            echo "  newName: " >> kustomization.yaml
+            echo "  newTag: " >> kustomization.yaml
+
           else
             echo "kustomization.yaml aleady exists, skip generate new file."
             # mv kustomization.yaml kustomization_original.yaml
