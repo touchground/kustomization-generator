@@ -170,8 +170,8 @@ runs:
             # Add images placeholder
             echo "images:" >> kustomization.yaml
             echo "- name: IMAGE_NAME" >> kustomization.yaml
-            echo "  newName: " >> kustomization.yaml
-            echo "  newTag: " >> kustomization.yaml
+            echo "  newName: myApp" >> kustomization.yaml
+            echo "  newTag: v1.0" >> kustomization.yaml
 
           else
             echo "kustomization.yaml aleady exists, skip generate new file."
