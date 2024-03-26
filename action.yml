@@ -172,56 +172,48 @@ runs:
               echo "namePrefix: $ENV-" >> kustomization.yaml
             fi
           else
-            echo "kustomization.yaml aleady exists, merge with the new file."
-            mv kustomization.yaml kustomization_original.yaml
+            echo "kustomization.yaml aleady exists, skip generate new file."
+            # mv kustomization.yaml kustomization_original.yaml
 
-             # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
-            RESOURCE_YAML_FILES_ARRAY=()
-            PATCH_YAML_FILES_ARRAY=()
+            #  # Add yaml files to the appropriate section in kustomization.yaml
+            # YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization*.yaml")
+            # RESOURCE_YAML_FILES_ARRAY=()
+            # PATCH_YAML_FILES_ARRAY=()
 
-            for FILE in $YAML_FILES; do
-              FILENAME=$(basename -- "$FILE")
-              if [[ $FILENAME == patch* ]]; then
-                PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-              else
-                echo "Adding $FILENAME to resources"
-                RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-              fi
-            done
+            # for FILE in $YAML_FILES; do
+            #   FILENAME=$(basename -- "$FILE")
+            #   if [[ $FILENAME == patch* ]]; then
+            #     PATCH_YAML_FILES_ARRAY+=("$FILENAME")
+            #   else
+            #     echo "Adding $FILENAME to resources"
+            #     RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
+            #   fi
+            # done
             
-            # add ../../base to resources
-            echo "Adding ../../base to resources"
-            RESOURCE_YAML_FILES_ARRAY+=("../../base")
-            YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
-            echo "YAML_FILES_COMMA_SEPARATED: $YAML_FILES_COMMA_SEPARATED"
-            tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
+            # # add ../../base to resources
+            # echo "Adding ../../base to resources"
+            # RESOURCE_YAML_FILES_ARRAY+=("../../base")
+            # YAML_FILES_COMMA_SEPARATED=$(IFS=','; echo "${RESOURCE_YAML_FILES_ARRAY[*]}")
+            # echo "YAML_FILES_COMMA_SEPARATED: $YAML_FILES_COMMA_SEPARATED"
+            # tg-kustomize create --resources $YAML_FILES_COMMA_SEPARATED
 
-            # Add patch files to the appropriate section in kustomization.yaml
-            if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
-              echo "patches:" >> kustomization.yaml
-              for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-                echo "Adding $PATCH_FILE to patches"
-                echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  target:" >> kustomization.yaml
-                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
-              done
-            fi
+            # # Add patch files to the appropriate section in kustomization.yaml
+            # if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
+            #   echo "patches:" >> kustomization.yaml
+            #   for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
+            #     echo "Adding $PATCH_FILE to patches"
+            #     echo "- path: $PATCH_FILE" >> kustomization.yaml
+            #     echo "  target:" >> kustomization.yaml
+            #     echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
+            #   done
+            # fi
 
-            # Add namePrefix if envPrefix is true
-            if [ "${{ inputs.envPrefix }}" = "true" ]; then
-              echo "namePrefix: $ENV-" >> kustomization.yaml
-            fi
-
-            # Merge original and new kustomization.yaml
-            echo "Merging original and new kustomization.yaml..."
-            yq m -a=append kustomization_original.yaml kustomization.yaml > kustomization_merged.yaml
-
-            # Replace original kustomization.yaml with the merged one
-            rm kustomization_original.yaml
-            mv kustomization_merged.yaml kustomization.yaml
-
-            # merge_kustomization_files
+            # # Add namePrefix if envPrefix is true
+            # if [ "${{ inputs.envPrefix }}" = "true" ]; then
+            #   echo "namePrefix: $ENV-" >> kustomization.yaml
+            # fi
+            
+            # # merge_kustomization_files
           fi
 
           popd
