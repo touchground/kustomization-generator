@@ -71,7 +71,7 @@ runs:
           fi
 
           # Remove the temporary files and rename the merged file to kustomization.yaml
-          rm -f $FILENAME kustomization.yaml && mv kustomization_merged.yaml kustomization.yaml
+          rm -f $FILENAME && rm -f kustomization.yaml && mv kustomization_merged.yaml kustomization.yaml
         }
 
         # Suppress output
