@@ -80,38 +80,32 @@ runs:
         # Create base kustomization.yaml
         pushd $BASE_DIR
         echo "Generate Base"
-        # If kustomization.yaml already exists, merge it with the new one 
+        # If kustomization.yaml already exists, skip
         if [ ! -f "kustomization.yaml" ]; then
-          merge_kust=false
-        else
-          mv kustomization.yaml kustomization_original.yaml
-          merge_kust=true
-        fi
-        tg-kustomize create --autodetect
+          # remove image name when using overlays to set actual image tag
+          sed '/^          name: IMAGE/d' deployment.yaml
+
+          # Generate base
+          tg-kustomize create --autodetect
         
-        # Add labels to kustomization.yaml
-        LABELS="${{ inputs.commonLabels }}"
-        if [ -n "$LABELS" ]; then
-          echo "Adding labels"
-          echo "commonLabels:" >> kustomization.yaml
-          IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
-          for LABEL in "${LABEL_ARRAY[@]}"; do
-            IFS='=' read -ra KV <<< "$LABEL"
-            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
-          done
-        fi
+          # Add labels to kustomization.yaml
+          LABELS="${{ inputs.commonLabels }}"
+          if [ -n "$LABELS" ]; then
+            echo "Adding labels"
+            echo "commonLabels:" >> kustomization.yaml
+            IFS=',' read -ra LABEL_ARRAY <<< "$LABELS"
+            for LABEL in "${LABEL_ARRAY[@]}"; do
+              IFS='=' read -ra KV <<< "$LABEL"
+              echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+            done
+          fi
 
-        # Add namespace to kustomization.yaml if it exists
-        NAMESPACE="${{ inputs.namespace }}"
-        if [ -n "$NAMESPACE" ]; then
-          echo "Adding namespace"
-          echo "namespace: $NAMESPACE" >> kustomization.yaml
-        fi
-
-        # Merge files
-        if [ "$merge_kust" = "true" ]; then
-          echo "Base kustomization.yaml file already exists, merge with the new file."
-          merge_kustomization_files
+          # Add namespace to kustomization.yaml if it exists
+          NAMESPACE="${{ inputs.namespace }}"
+          if [ -n "$NAMESPACE" ]; then
+            echo "Adding namespace"
+            echo "namespace: $NAMESPACE" >> kustomization.yaml
+          fi
         fi
 
         popd
