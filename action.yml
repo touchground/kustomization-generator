@@ -57,13 +57,13 @@ runs:
       run: |
         # merge function
         merge_kustomization_files() {
-          FILENAME=$1
-          if [ ! -f $FILENAME ]; then
+          # FILENAME=$1
+          if [ ! -f kustomization_original.yaml ]; then
             echo "Input file missing or not found. Please check the file and try again."
             exit 1
           fi
           # Merge the existing kustomization.yaml file with the new one
-          tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' $FILENAME kustomization.yaml > kustomization_merged.yaml
+          tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' kustomization_original.yaml kustomization.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
             echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
             rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
@@ -71,7 +71,7 @@ runs:
           fi
 
           # Remove the temporary files and rename the merged file to kustomization.yaml
-          rm -f $FILENAME && rm -f kustomization.yaml && mv kustomization_merged.yaml kustomization.yaml
+          rm -f kustomization_original.yaml && rm -f kustomization.yaml && mv kustomization_merged.yaml kustomization.yaml
         }
 
         # Suppress output
@@ -134,7 +134,8 @@ runs:
       
         # If kustomization.yaml already exists, merge it with the new one
         if [ -f "kustomization.yaml" ]; then
-          merge_kustomization_files kustomization_original.yaml
+          merge_kustomization_files 
+          # kustomization_original.yaml
         fi
 
         popd
