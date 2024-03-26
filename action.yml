@@ -122,8 +122,10 @@ runs:
           echo "commonAnnotations:" >> kustomization.yaml
           IFS=',' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
           for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
-            IFS=':' read -a KV <<< "$($ANNOTATION | sed 's/:/\\:/2')"
-            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+            IFS=':' read -ra KV <<< "$ANNOTATION"
+            KEY=${KV[0]}
+            VALUE="${ANNOTATION#*:}"
+            echo "  $KEY: \"$VALUE\"" >> kustomization.yaml
           done
         fi
 
