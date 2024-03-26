@@ -135,10 +135,6 @@ runs:
             RESOURCE_YAML_FILES_ARRAY=()
             PATCH_YAML_FILES_ARRAY=()
 
-            # add ../../base to resources
-            echo "Adding ../../base to resources"
-            RESOURCE_YAML_FILES_ARRAY+=("../../base")
-
             for FILE in $YAML_FILES; do
               FILENAME=$(basename -- "$FILE")
               if [[ $FILENAME == patch* ]]; then
