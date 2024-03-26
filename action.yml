@@ -55,6 +55,25 @@ runs:
 
     - name: Generate Kustomization Base and Overlay Structure
       run: |
+        # merge function
+        merge_kustomization_files() {
+          FILENAME=$1
+          if [ ! -f $FILENAME ]; then
+            echo "Input file missing or not found. Please check the file and try again."
+            exit 1
+          fi
+          # Merge the existing kustomization.yaml file with the new one
+          tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' $FILENAME kustomization.yaml > kustomization_merged.yaml
+          if [ $? -ne 0 ]; then
+            echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
+            rm kustomization.yaml && mv kustomization_original.yaml kustomization.yaml
+            exit 1
+          fi
+
+          # Remove the temporary files and rename the merged file to kustomization.yaml
+          rm -f $FILENAME kustomization.yaml && mv kustomization_merged.yaml kustomization.yaml
+        }
+
         # Suppress output
         pushd () {
           command pushd "$@" > /dev/null
@@ -70,45 +89,52 @@ runs:
         # Create base kustomization.yaml
         pushd $BASE_DIR
         echo "Generate Base"
-        # If kustomization.yaml already exists, skip
-        if [ ! -f "kustomization.yaml" ]; then
-          # Generate base
-          tg-kustomize create --autodetect --labels ${{ inputs.commonLabels }} --annotations ${{ inputs.commonAnnotations }}
+        # If kustomization.yaml already exists
+        if [ -f "kustomization.yaml" ]; then
+          mv kustomization.yaml kustomization_original.yaml
+        fi
 
-          # Update image name to a spaceholder in deployment file
-          echo "Update image name"
-          sed -i 's|^\(\s*- image:\).*|\1 IMAGE_NAME|' deployment.yaml
+        # Generate base
+        tg-kustomize create --autodetect 
 
-          # Add labels to kustomization.yaml
-          LABELS="${{ inputs.commonLabels }}"
-          if [ -n "$LABELS" ]; then
-            echo "Adding labels"
-            echo "commonLabels:" >> kustomization.yaml
-            IFS=':' read -ra LABEL_ARRAY <<< "$LABELS"
-            for LABEL in "${LABEL_ARRAY[@]}"; do
-              IFS='=' read -ra KV <<< "$LABEL"
-              echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
-            done
-          fi
+        # Update image name to a spaceholder in deployment file
+        echo "Update image name"
+        sed -i 's|^\(\s*- image:\).*|\1 IMAGE_NAME|' deployment.yaml
 
-          # Add annotations to kustomization.yaml
-          ANNOTATIONS="${{ inputs.annotations }}"
-          if [ -n "$ANNOTATIONS" ]; then
-            echo "Adding annotations"
-            echo "commonAnnotations:" >> kustomization.yaml
-            IFS=':' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
-            for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
-              IFS='=' read -ra KV <<< "$ANNOTATION"
-              echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
-            done
-          fi
+        # Add labels to kustomization.yaml
+        LABELS="${{ inputs.commonLabels }}"
+        if [ -n "$LABELS" ]; then
+          echo "Adding labels"
+          echo "commonLabels:" >> kustomization.yaml
+          IFS=':' read -ra LABEL_ARRAY <<< "$LABELS"
+          for LABEL in "${LABEL_ARRAY[@]}"; do
+            IFS='=' read -ra KV <<< "$LABEL"
+            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+          done
+        fi
 
-          # Add namespace to kustomization.yaml if it exists
-          NAMESPACE="${{ inputs.namespace }}"
-          if [ -n "$NAMESPACE" ]; then
-            echo "Adding namespace"
-            echo "namespace: $NAMESPACE" >> kustomization.yaml
-          fi
+        # Add annotations to kustomization.yaml
+        ANNOTATIONS="${{ inputs.annotations }}"
+        if [ -n "$ANNOTATIONS" ]; then
+          echo "Adding annotations"
+          echo "commonAnnotations:" >> kustomization.yaml
+          IFS=':' read -ra ANNOTATION_ARRAY <<< "$ANNOTATIONS"
+          for ANNOTATION in "${ANNOTATION_ARRAY[@]}"; do
+            IFS='=' read -ra KV <<< "$ANNOTATION"
+            echo "  ${KV[0]}: \"${KV[1]}\"" >> kustomization.yaml
+          done
+        fi
+
+        # Add namespace to kustomization.yaml if it exists
+        NAMESPACE="${{ inputs.namespace }}"
+        if [ -n "$NAMESPACE" ]; then
+          echo "Adding namespace"
+          echo "namespace: $NAMESPACE" >> kustomization.yaml
+        fi
+      
+        # If kustomization.yaml already exists, merge it with the new one
+        if [ -f "kustomization.yaml" ]; then
+          merge_kustomization_files kustomization_original.yaml
         fi
 
         popd
@@ -159,7 +185,6 @@ runs:
                 echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
               done
             fi
-            
             # Add namePrefix if envPrefix is true
             if [ "${{ inputs.envPrefix }}" = "true" ]; then
               echo "namePrefix: $ENV-" >> kustomization.yaml
@@ -169,7 +194,8 @@ runs:
             echo "images:" >> kustomization.yaml
             echo "- name: IMAGE_NAME" >> kustomization.yaml
             echo "  newName: NoImage" >> kustomization.yaml
-            echo "  newTag: NotRelease" >> kustomization.yaml
+            echo "  newTag: v1.0" >> kustomization.yaml
+
           else
             echo "kustomization.yaml aleady exists"
           fi
