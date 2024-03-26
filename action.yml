@@ -58,7 +58,8 @@ runs:
         # merge function
         merge_kustomization_files() {
           FILENAME=$1
-          if [ ! -f "$FILENAME" ]; then
+          echo "Merging $FILENAME file..."
+          if [ ! -f $FILENAME ]; then
             echo "Input file missing or not found. Please check the file and try again."
             exit 1
           fi
@@ -91,6 +92,7 @@ runs:
         echo "Generate Base"
         # If kustomization.yaml already exists
         if [ -f "kustomization.yaml" ]; then
+          merge_kube=true
           mv kustomization.yaml kustomization_original.yaml
         fi
 
@@ -133,7 +135,7 @@ runs:
         fi
       
         # If kustomization.yaml already exists, merge it with the new one
-        if [ -f "kustomization.yaml" ]; then
+        if [ "$merge_kube" == "true" ]; then
           merge_kustomization_files kustomization_original.yaml
         fi
 
