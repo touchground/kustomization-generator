@@ -84,9 +84,6 @@ runs:
         if [ ! -f "kustomization.yaml" ]; then
           # Generate base
           tg-kustomize create --autodetect
-        
-          # remove image name when using overlays to set actual image tag
-          sed '/^          name: IMAGE/d' deployment.yaml
 
           # Add labels to kustomization.yaml
           LABELS="${{ inputs.commonLabels }}"
