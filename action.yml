@@ -82,12 +82,12 @@ runs:
         echo "Generate Base"
         # If kustomization.yaml already exists, skip
         if [ ! -f "kustomization.yaml" ]; then
-          # remove image name when using overlays to set actual image tag
-          sed '/^          name: IMAGE/d' deployment.yaml
-
           # Generate base
           tg-kustomize create --autodetect
         
+          # remove image name when using overlays to set actual image tag
+          sed '/^          name: IMAGE/d' deployment.yaml
+
           # Add labels to kustomization.yaml
           LABELS="${{ inputs.commonLabels }}"
           if [ -n "$LABELS" ]; then
