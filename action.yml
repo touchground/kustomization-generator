@@ -58,7 +58,7 @@ runs:
         # merge function
         merge_kustomization_files() {
           FILENAME=$1
-          if [ ! -f $FILENAME ]; then
+          if [ ! -f "$FILENAME" ]; then
             echo "Input file missing or not found. Please check the file and try again."
             exit 1
           fi
