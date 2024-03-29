@@ -155,24 +155,40 @@ runs:
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
 
+          # find all yaml files in the directory
+          YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
+          # categorize yaml files into resources and patches
+          RESOURCE_YAML_FILES_ARRAY=()
+          PATCH_YAML_FILES_ARRAY=()
+
+          for FILE in $YAML_FILES; do
+            FILENAME=$(basename -- "$FILE")
+            if [[ $FILENAME == *patch* ]]; then
+              PATCH_YAML_FILES_ARRAY+=("$FILENAME")
+            else
+              echo "Adding $FILENAME to resources"
+              RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
+            fi
+          done
+
           # Don't merge if kustomization.yaml alreay exist in overlays 
           if [ ! -f "kustomization.yaml" ]; then
             echo "Generating kustomization.yaml..."
 
-            # Add yaml files to the appropriate section in kustomization.yaml
-            YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
-            RESOURCE_YAML_FILES_ARRAY=()
-            PATCH_YAML_FILES_ARRAY=()
+            # # Add yaml files to the appropriate section in kustomization.yaml
+            # YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
+            # RESOURCE_YAML_FILES_ARRAY=()
+            # PATCH_YAML_FILES_ARRAY=()
 
-            for FILE in $YAML_FILES; do
-              FILENAME=$(basename -- "$FILE")
-              if [[ $FILENAME == patch* ]]; then
-                PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-              else
-                echo "Adding $FILENAME to resources"
-                RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-              fi
-            done
+            # for FILE in $YAML_FILES; do
+            #   FILENAME=$(basename -- "$FILE")
+            #   if [[ $FILENAME == patch* ]]; then
+            #     PATCH_YAML_FILES_ARRAY+=("$FILENAME")
+            #   else
+            #     echo "Adding $FILENAME to resources"
+            #     RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
+            #   fi
+            # done
            
             # add ../../base to resources
             echo "Adding ../../base to resources"
@@ -204,15 +220,67 @@ runs:
 
           else
             echo "kustomization.yaml aleady exists"
+          
+            # Check if any resource file is missing compared to RESOURCE_YAML_FILES_ARRAY
+            echo "Checking for missing resource files..."
+            CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
+            for RESOURCE in "${RESOURCE_YAML_FILES_ARRAY[@]}"; do
+              if [[ ! " $CURRENT_RESOURCES " =~ " $RESOURCE " ]]; then
+                echo "Resource file $RESOURCE is missing in kustomization.yaml, adding it..."
+                echo "- $RESOURCE" >> kustomization.yaml
+              fi
+            done
+            # Check if any resource file in kustomization.yaml no longer exists
+            echo "Checking for non-existent resource files..."
+            CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
+            for RESOURCE in $CURRENT_RESOURCES; do
+              # Check if the resource file is in the root directory
+              if [[ $RESOURCE != */* ]]; then
+                if [[ ! -f "$RESOURCE" ]]; then
+                  echo "Resource file $RESOURCE no longer exists, removing it from kustomization.yaml..."
+                  yq e -i "del(.resources[] | select(. == \"$RESOURCE\"))" kustomization.yaml
+                fi
+              fi
+            done
+            
+            # Get current patches from kustomization.yaml
+            CURRENT_PATCHES=$(yq e '.patches[].path' kustomization.yaml)
+
+            # Add missing patch files
+            for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
+              if [[ ! " $CURRENT_PATCHES " =~ " $PATCH_FILE " ]]; then
+                echo "Patch file $PATCH_FILE is missing in kustomization.yaml, adding it..."
+                echo "- path: $PATCH_FILE" >> kustomization.yaml
+                echo "  target:" >> kustomization.yaml
+                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
+              fi
+            done
+
+            # Remove non-existent patch files
+            for PATCH_FILE in $CURRENT_PATCHES; do
+              if [[ ! -f "$PATCH_FILE" ]]; then
+                echo "Patch file $PATCH_FILE no longer exists, removing it from kustomization.yaml..."
+                yq e -i "del(.patches[] | select(.path == \"$PATCH_FILE\"))" kustomization.yaml
+              fi
+            done
 
             # Check if namePrefix exists in kustomization.yaml
             if yq e '.namePrefix' kustomization.yaml > /dev/null; then
-              # Update the namePrefix value
-              echo "Updating kustomization.yaml..."
-              yq e -i ".namePrefix = \"$ENV-\"" kustomization.yaml
+              if [ "${{ inputs.envPrefix }}" = "false" ]; then
+                # Remove the namePrefix value
+                echo "Removing namePrefix from kustomization.yaml..."
+                yq e -i "del(.namePrefix)" kustomization.yaml
+              else
+                # Update the namePrefix value
+                echo "Adding namePrefix from kustomization.yaml..."
+                yq e -i ".namePrefix = \"$ENV-\"" kustomization.yaml
+              fi
             else
-              # Add namePrefix if it doesn't exist
-              echo "namePrefix: $ENV-" >> kustomization.yaml
+              if [ "${{ inputs.envPrefix }}" = "true" ]; then
+                # Add namePrefix if it doesn't exist
+                echo "Adding namePrefix from kustomization.yaml..."
+                echo "namePrefix: $ENV-" >> kustomization.yaml
+              fi
             fi
           fi
 
