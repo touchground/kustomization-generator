@@ -155,7 +155,7 @@ runs:
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
 
-          # If kustomization.yaml already exists, merge it with the new one 
+          # Don't merge if kustomization.yaml alreay exist in overlays 
           if [ ! -f "kustomization.yaml" ]; then
             echo "Generating kustomization.yaml..."
 
@@ -204,6 +204,16 @@ runs:
 
           else
             echo "kustomization.yaml aleady exists"
+
+            # Check if namePrefix exists in kustomization.yaml
+            if yq e '.namePrefix' kustomization.yaml > /dev/null; then
+              # Update the namePrefix value
+              echo "Updating kustomization.yaml..."
+              yq e -i ".namePrefix = \"$ENV-\"" kustomization.yaml
+            else
+              # Add namePrefix if it doesn't exist
+              echo "namePrefix: $ENV-" >> kustomization.yaml
+            fi
           fi
 
           popd
