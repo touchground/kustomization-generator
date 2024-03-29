@@ -272,7 +272,7 @@ runs:
                 if [ -z "$PATCH_KIND" ]; then
                   yq e -i ".patches += [{\"path\": \"$PATCH_FILE\", \"target\": {\"kind\": \"$PATCH_KIND\"}}]" kustomization.yaml
                 else
-                  echo "Kind not found in $PATCH_FILE, please fix it then try agian..."
+                  echo "::error::Kind not found in $PATCH_FILE, please fix it then try agian..."
                   exit 1
                 fi
               fi
