@@ -264,11 +264,7 @@ runs:
               if [[ ! " $CURRENT_PATCHES " =~ " $PATCH_FILE " ]]; then
                 echo "Patch file $PATCH_FILE is missing in kustomization.yaml, adding it..."
                 PATCH_KIND=$(yq e '.kind' $PATCH_FILE)
-                # echo "PATCH_KIND: $PATCH_KIND"
-                # echo "- path: $PATCH_FILE" >> kustomization.yaml
-                # echo "  target:" >> kustomization.yaml
-                # echo "    kind: $PATCH_KIND" >> kustomization.yaml
-                yq e -i '.patches += [{"path": "$PATCH_FILE", "target": {"kind": "$PATCH_KIND"}}]' kustomization.yaml
+                yq e -i '.patches += [{"path": \'$PATCH_FILE\'', "target": {"kind": \'$PATCH_KIND\'}}]' kustomization.yaml
                 
               fi
             done
