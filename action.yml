@@ -220,16 +220,7 @@ runs:
 
           else
             echo "kustomization.yaml aleady exists"
-          
-            # Check if any resource file is missing compared to RESOURCE_YAML_FILES_ARRAY
-            echo "Checking for missing resource files..."
-            CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
-            for RESOURCE in "${RESOURCE_YAML_FILES_ARRAY[@]}"; do
-              if [[ ! " $CURRENT_RESOURCES " =~ " $RESOURCE " ]]; then
-                echo "Resource file $RESOURCE is missing in kustomization.yaml, adding it..."
-                echo "- $RESOURCE" >> kustomization.yaml
-              fi
-            done
+
             # Check if any resource file in kustomization.yaml no longer exists
             echo "Checking for non-existent resource files..."
             CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
@@ -240,6 +231,16 @@ runs:
                   echo "Resource file $RESOURCE no longer exists, removing it from kustomization.yaml..."
                   yq e -i "del(.resources[] | select(. == \"$RESOURCE\"))" kustomization.yaml
                 fi
+              fi
+            done
+            
+            # Check if any resource file is missing compared to RESOURCE_YAML_FILES_ARRAY
+            echo "Checking for missing resource files..."
+            CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
+            for RESOURCE in "${RESOURCE_YAML_FILES_ARRAY[@]}"; do
+              if [[ ! " $CURRENT_RESOURCES " =~ " $RESOURCE " ]]; then
+                echo "Resource file $RESOURCE is missing in kustomization.yaml, adding it..."
+                yq e -i ".resources += [\"$RESOURCE\"]" kustomization.yaml
               fi
             done
             
