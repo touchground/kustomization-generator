@@ -244,16 +244,28 @@ runs:
               fi
             done
             
-            # Get current patches from kustomization.yaml
-            CURRENT_PATCHES=$(yq e '.patches[].path' kustomization.yaml)
+            # Check if .patches[] exists in kustomization.yaml
+            if yq e '.patches[]' kustomization.yaml > /dev/null; then
+              # Get current patches from kustomization.yaml
+              CURRENT_PATCHES=$(yq e '.patches[].path' kustomization.yaml)
+              has_patches=true
+            else
+              echo ".patches[] does not exist in kustomization.yaml"
+              CURRENT_PATCHES=""
+              has_patches=false
+            fi
 
             # Add missing patch files
             for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
+              if [ "$has_patches" = false ]; then
+                echo "patches:" >> kustomization.yaml
+                has_patches=true
+              fi
               if [[ ! " $CURRENT_PATCHES " =~ " $PATCH_FILE " ]]; then
                 echo "Patch file $PATCH_FILE is missing in kustomization.yaml, adding it..."
-                echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  target:" >> kustomization.yaml
-                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
+                PATCH_KIND=$(yq e '.kind' $PATCH_FILE)
+                PATCH_CONTENT=$(cat $PATCH_FILE)
+                yq e -i ".patches += [{path: \"$PATCH_FILE\", target: {kind: \"$PATCH_KIND\"}]" kustomization.yaml
               fi
             done
 
