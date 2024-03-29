@@ -36,19 +36,19 @@ runs:
       run: |
         BASE_DIR="${{ inputs.basePath }}"
         if [ ! -d "$BASE_DIR" ]; then
-          echo "Directory $BASE_DIR does not exist"
+          echo "::error::Directory $BASE_DIR does not exist"
           exit 1
         fi
 
         YAML_FILES=$(find $BASE_DIR -name "*.yaml")
         if [ -z "$YAML_FILES" ]; then
-          echo "No YAML files found in $BASE_DIR and its subdirectories"
+          echo "::error::No YAML files found in $BASE_DIR and its subdirectories"
           exit 1
         fi
 
         ENVIRONMENTS="${{ inputs.environments }}"
         if [ -z "$ENVIRONMENTS" ] || [[ "$ENVIRONMENTS" != *","* ]]; then
-          echo "Environments input is empty or not a comma-delimited string"
+          echo "::error::Environments input is empty or not a comma-delimited string"
           exit 1
         fi
       shell: bash
@@ -60,13 +60,13 @@ runs:
           FILENAME=$1
           echo "Merging $FILENAME file..."
           if [ ! -f $FILENAME ]; then
-            echo "Input file missing or not found. Please check the file and try again."
+            echo "::error::Input file missing or not found. Please check the file and try again."
             exit 1
           fi
           # Merge the existing kustomization.yaml file with the new one
           tg-yq eval-all 'select(fileIndex == 0) * select(fileIndex == 1)' $FILENAME kustomization.yaml > kustomization_merged.yaml
           if [ $? -ne 0 ]; then
-            echo "Failed to merge into existing kustomization.yaml file. Please check the file and try again."
+            echo "::error::Failed to merge into existing kustomization.yaml file. Please check the file and try again."
             rm kustomization.yaml && mv $FILENAME kustomization.yaml
             exit 1
           fi
@@ -207,7 +207,7 @@ runs:
                   echo "  target:" >> kustomization.yaml
                   echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
                 else
-                  echo "Kind not found in $PATCH_FILE, please fix it then try agian..."
+                  echo "::error::Kind not found in $PATCH_FILE, please fix it then try agian..."
                   exit 1
                 fi
               done
