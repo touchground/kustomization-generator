@@ -166,7 +166,6 @@ runs:
             if [[ $FILENAME == *patch* ]]; then
               PATCH_YAML_FILES_ARRAY+=("$FILENAME")
             else
-              echo "Adding $FILENAME to resources"
               RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
             fi
           done
@@ -238,7 +237,7 @@ runs:
             echo "Checking for missing resource files..."
             CURRENT_RESOURCES=$(yq e '.resources[]' kustomization.yaml)
             for RESOURCE in "${RESOURCE_YAML_FILES_ARRAY[@]}"; do
-              if [[ ! " $CURRENT_RESOURCES " =~ " $RESOURCE " ]]; then
+              if [[ ! "$CURRENT_RESOURCES" =~ "$RESOURCE" ]]; then
                 echo "Resource file $RESOURCE is missing in kustomization.yaml, adding it..."
                 yq e -i ".resources += [\"$RESOURCE\"]" kustomization.yaml
               fi
@@ -261,7 +260,7 @@ runs:
                 echo "patches:" >> kustomization.yaml
                 has_patches=true
               fi
-              if [[ ! " $CURRENT_PATCHES " =~ " $PATCH_FILE " ]]; then
+              if [[ ! "$CURRENT_PATCHES" =~ "$PATCH_FILE" ]]; then
                 echo "Patch file $PATCH_FILE is missing in kustomization.yaml, adding it..."
                 PATCH_KIND=$(yq e '.kind' "$PATCH_FILE")
                 yq e -i ".patches += [{\"path\": \"$PATCH_FILE\", \"target\": {\"kind\": \"$PATCH_KIND\"}}]" kustomization.yaml
