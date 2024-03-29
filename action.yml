@@ -200,10 +200,16 @@ runs:
             if [ ${#PATCH_YAML_FILES_ARRAY[@]} -ne 0 ]; then
               echo "patches:" >> kustomization.yaml
               for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-                echo "Adding $PATCH_FILE to patches"
-                echo "- path: $PATCH_FILE" >> kustomization.yaml
-                echo "  target:" >> kustomization.yaml
-                echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
+                PATCH_KIND=$(yq e '.kind' "$PATCH_FILE")
+                if [ -z "$PATCH_KIND" ]; then
+                  echo "Adding $PATCH_FILE to patches"
+                  echo "- path: $PATCH_FILE" >> kustomization.yaml
+                  echo "  target:" >> kustomization.yaml
+                  echo "    kind: $(yq e '.kind' $PATCH_FILE)" >> kustomization.yaml
+                else
+                  echo "Kind not found in $PATCH_FILE, please fix it then try agian..."
+                  exit 1
+                fi
               done
             fi
             # Add namePrefix if envPrefix is true
@@ -266,7 +272,8 @@ runs:
                 if [ -z "$PATCH_KIND" ]; then
                   yq e -i ".patches += [{\"path\": \"$PATCH_FILE\", \"target\": {\"kind\": \"$PATCH_KIND\"}}]" kustomization.yaml
                 else
-                  yq e -i ".patches += [{\"path\": \"$PATCH_FILE\"}]" kustomization.yaml
+                  echo "Kind not found in $PATCH_FILE, please fix it then try agian..."
+                  exit 1
                 fi
               fi
             done
