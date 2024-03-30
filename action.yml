@@ -173,21 +173,6 @@ runs:
           # Don't merge if kustomization.yaml alreay exist in overlays 
           if [ ! -f "kustomization.yaml" ]; then
             echo "Generating kustomization.yaml..."
-
-            # # Add yaml files to the appropriate section in kustomization.yaml
-            # YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
-            # RESOURCE_YAML_FILES_ARRAY=()
-            # PATCH_YAML_FILES_ARRAY=()
-
-            # for FILE in $YAML_FILES; do
-            #   FILENAME=$(basename -- "$FILE")
-            #   if [[ $FILENAME == patch* ]]; then
-            #     PATCH_YAML_FILES_ARRAY+=("$FILENAME")
-            #   else
-            #     echo "Adding $FILENAME to resources"
-            #     RESOURCE_YAML_FILES_ARRAY+=("$FILENAME")
-            #   fi
-            # done
            
             # add ../../base to resources
             echo "Adding ../../base to resources"
@@ -262,7 +247,7 @@ runs:
 
             # Add missing patch files
             for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
-              if [ "$has_patches" = false ]; then
+              if [ "$has_patches" = "false" ]; then
                 echo "patches:" >> kustomization.yaml
                 has_patches=true
               fi
