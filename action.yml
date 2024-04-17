@@ -159,6 +159,7 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # Refresh patches files from base to overlays
+          echo "Refresh patches files from base to overlays"
           if [ -f "*patch-base.yaml" ]; then
             rm -f *patch-base.yaml
           fi
