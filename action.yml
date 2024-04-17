@@ -99,8 +99,8 @@ runs:
         # Generate base
         tg-kustomize create --autodetect 
 
-        # Remove any patch files
-        sed -i '/patch.*\.yaml/d' kustomization.yaml
+        # Remove any patch files in kustomization.yaml
+        sed -i '/patch-base.yaml/d' kustomization.yaml
         
         # Update image name to a spaceholder in deployment file
         if [ -f "deployment.yaml" ]; then
@@ -159,13 +159,13 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # Refresh patches files from base to overlays
+          echo "base: "
+          ls -l $BASE_DIR
           if [ -f "*patch-base.yaml" ]; then
             rm -f *patch-base.yaml
           fi
           if [ -f "$BASE_DIR/*patch-base.yaml" ]; then
             echo "Refresh patches files from base to overlays"
-            echo "base: "
-            ls -l $BASE_DIR
             cp $BASE_DIR/*patch-base.yaml .
             echo "$ENV: "
             ls -l 
