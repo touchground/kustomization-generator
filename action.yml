@@ -158,6 +158,9 @@ runs:
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
 
+          # copy patches files from base to overlays
+          cp -r $BASE_DIR/*patch*.yaml .
+
           # find all yaml files in the directory
           YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
           # categorize yaml files into resources and patches
@@ -299,5 +302,9 @@ runs:
           popd
           echo "=========================================="
         done
+
+        # Remove patches files from base
+        rm -f $BASE_DIR/*patch*.yaml
+        
         echo "completed!"
       shell: bash
