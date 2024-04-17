@@ -164,7 +164,11 @@ runs:
             rm -f *patch-base.yaml
           fi
           if [ -f "$BASE_DIR/*patch-base.yaml" ]; then
+            echo "base: "
+            ls -l $BASE_DIR
             cp $BASE_DIR/*patch-base.yaml .
+            echo "overlays: "
+            ls -l 
           fi
 
           # find all yaml files in the directory
