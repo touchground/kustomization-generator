@@ -99,6 +99,9 @@ runs:
         # Generate base
         tg-kustomize create --autodetect 
 
+        # Remove any patch files
+        sed -i '/patch.*\.yaml/d' kustomization.yaml
+        
         # Update image name to a spaceholder in deployment file
         if [ -f "deployment.yaml" ]; then
           echo "Update image name"
