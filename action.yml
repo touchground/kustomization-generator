@@ -159,7 +159,6 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # copy patches files from base to overlays
-          ls -la $BASE_DIR
           cp $BASE_DIR/*patch*.yaml .
 
           # find all yaml files in the directory
@@ -193,7 +192,7 @@ runs:
               echo "patches:" >> kustomization.yaml
               for PATCH_FILE in "${PATCH_YAML_FILES_ARRAY[@]}"; do
                 PATCH_KIND=$(tg-yq e '.kind' "$PATCH_FILE")
-                if [ -z "$PATCH_KIND" ]; then
+                if [ -n "$PATCH_KIND" ]; then
                   echo "Adding $PATCH_FILE to patches"
                   echo "- path: $PATCH_FILE" >> kustomization.yaml
                   echo "  target:" >> kustomization.yaml
