@@ -158,9 +158,12 @@ runs:
           mkdir -p $PARENT_DIR/overlays/$ENV
           pushd $PARENT_DIR/overlays/$ENV
 
-          # copy patches files from base to overlays
-          if [ -f "$BASE_DIR/*patch*.yaml" ]; then
-            cp $BASE_DIR/*patch*.yaml .
+          # Refresh patches files from base to overlays
+          if [ -f "*patch-base.yaml" ]; then
+            rm -f *patch-base.yaml
+          fi
+          if [ -f "$BASE_DIR/*patch-base.yaml" ]; then
+            cp $BASE_DIR/*patch-base.yaml .
           fi
 
           # find all yaml files in the directory
