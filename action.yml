@@ -159,7 +159,8 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # copy patches files from base to overlays
-          cp -r $BASE_DIR/*patch*.yaml .
+          ls -la $BASE_DIR
+          cp $BASE_DIR/*patch*.yaml .
 
           # find all yaml files in the directory
           YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
@@ -305,6 +306,6 @@ runs:
 
         # Remove patches files from base
         rm -f $BASE_DIR/*patch*.yaml
-        
+
         echo "completed!"
       shell: bash
