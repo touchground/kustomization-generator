@@ -161,12 +161,12 @@ runs:
           # Refresh patches files from base to overlays
           echo "base: "
           ls -l $BASE_DIR
-          if [ -f "*patch-base.yaml" ]; then
-            rm -f *patch-base.yaml
-          fi
-          if [ -f "$BASE_DIR/*patch-base.yaml" ]; then
+            if ls *patch*.yaml 1> /dev/null 2>&1; then
+            rm -f *patch*.yaml
+            fi
+          if ls *patch*.yaml 1> /dev/null 2>&1; then
             echo "Refresh patches files from base to overlays"
-            cp $BASE_DIR/*patch-base.yaml .
+            cp $BASE_DIR/*patch*.yaml .
             echo "$ENV: "
             ls -l 
           fi
