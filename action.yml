@@ -159,7 +159,9 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # copy patches files from base to overlays
-          cp $BASE_DIR/*patch*.yaml .
+          if [ -f "$BASE_DIR/*patch*.yaml" ]; then
+            cp $BASE_DIR/*patch*.yaml .
+          fi
 
           # find all yaml files in the directory
           YAML_FILES=$(find . -name "*.yaml" ! -name "kustomization.yaml")
