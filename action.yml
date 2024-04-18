@@ -159,12 +159,12 @@ runs:
           pushd $PARENT_DIR/overlays/$ENV
 
           # Refresh patches files from base to overlays
-          if ls *patch*.yaml 1> /dev/null 2>&1; then
-            echo "- Deleting all *patch*.yaml files in the $ENV.."
-            rm -f *patch*.yaml
+          if ls *patch-base.yaml 1> /dev/null 2>&1; then
+            echo "- Deleting *patch-base.yaml files that are originated from the base..."
+            rm -f *patch-base.yaml
           fi
-          if ls $BASE_DIR/*patch*.yaml 1> /dev/null 2>&1; then
-            echo "- Refresh patches files from base to overlays"
+          if ls $BASE_DIR/*patch-base.yaml 1> /dev/null 2>&1; then
+            echo "- Refreshing patches files from the base..."
             cp $BASE_DIR/*patch*.yaml .
           fi
 
